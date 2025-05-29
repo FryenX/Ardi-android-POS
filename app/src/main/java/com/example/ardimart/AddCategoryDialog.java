@@ -2,6 +2,7 @@ package com.example.ardimart;
 
 import android.app.Dialog;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -49,6 +50,19 @@ public class AddCategoryDialog extends DialogFragment {
                         dbHelper.copyDatabaseIfNeeded();
                         db = dbHelper.getConnection();
 
+                        // Check if category name already exists
+                        String query = "SELECT id FROM categories WHERE LOWER(name) = LOWER(?)";
+                        try (Cursor cursor = db.rawQuery(query, new String[]{name})) {
+                            if (cursor.moveToFirst()) {
+                                // Name already exists
+                                requireActivity().runOnUiThread(() ->
+                                        Toast.makeText(getContext(), "Category name already exists", Toast.LENGTH_SHORT).show()
+                                );
+                                return;
+                            }
+                        }
+
+                        // Insert if unique
                         ContentValues values = new ContentValues();
                         values.put("name", name);
                         long newId = db.insert("categories", null, values);
@@ -63,17 +77,21 @@ public class AddCategoryDialog extends DialogFragment {
                             });
                         } else {
                             requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), "Failed to add category", Toast.LENGTH_SHORT).show());
+                                    Toast.makeText(getContext(), "Failed to add category", Toast.LENGTH_SHORT).show()
+                            );
                         }
                     } catch (Exception e) {
                         requireActivity().runOnUiThread(() ->
-                                Toast.makeText(getContext(), "DB Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                Toast.makeText(getContext(), "DB Error: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                        );
                     } finally {
                         if (db != null && db.isOpen()) {
                             db.close();
                         }
                     }
                 });
+            } else {
+                Toast.makeText(getContext(), "Category name cannot be empty", Toast.LENGTH_SHORT).show();
             }
         });
 

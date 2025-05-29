@@ -1,6 +1,7 @@
 package com.example.ardimart;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Bundle;
@@ -50,6 +51,25 @@ public class AddUser extends AppCompatActivity {
         txtPasswordConfirm = findViewById(R.id.txtPasswordConfirm);
         txtLevel = findViewById(R.id.txtLevel);
         btnSaveUser = findViewById(R.id.btnSaveUser);
+
+        txtUsername.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                String usernameInput = txtUsername.getText().toString().trim();
+                if (!usernameInput.isEmpty()) {
+                    executor.execute(() -> {
+                        DatabaseHelper dbHelper = new DatabaseHelper(AddUser.this);
+                        SQLiteDatabase db = dbHelper.getConnection();
+                        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", new String[]{usernameInput});
+                        if (cursor.moveToFirst()) {
+                            runOnUiThread(() -> {
+                                txtUsername.setError("Username already taken");
+                            });
+                        }
+                        cursor.close();
+                    });
+                }
+            }
+        });
 
         ImageView passwordToggle = findViewById(R.id.passwordToggle);
         passwordToggle.setOnClickListener(v -> togglePasswordVisibility(txtPassword, passwordToggle));
@@ -108,6 +128,14 @@ public class AddUser extends AppCompatActivity {
                 DatabaseHelper dbHelper = new DatabaseHelper(AddUser.this);
                 dbHelper.copyDatabaseIfNeeded();
                 SQLiteDatabase db = dbHelper.getConnection();
+
+                Cursor cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", new String[]{username});
+                if (cursor.moveToFirst()) {
+                    runOnUiThread(() -> Toast.makeText(AddUser.this, "Username already exists", Toast.LENGTH_SHORT).show());
+                    cursor.close();
+                    return;
+                }
+                cursor.close();
 
                 String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
                 String uuid = UUID.randomUUID().toString();

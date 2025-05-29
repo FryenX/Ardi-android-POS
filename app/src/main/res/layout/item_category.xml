@@ -1,43 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp">
 
-    <TextView
-        android:id="@+id/txtCategoryNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="1."
-        android:textSize="18sp"
-        android:layout_marginEnd="8dp" />
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center"
+        android:paddingVertical="5dp">
+        <TextView
+            android:id="@+id/txtCategoryNumber"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:layout_marginEnd="8dp"
+            android:text="1."
+            />
 
-    <TextView
-        android:id="@+id/txtCategoryName"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="wrap_content"
-        android:text="Category Name"
-        android:textSize="18sp" />
+        <TextView
+            android:id="@+id/txtCategoryName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:text="Category Name"
+            />
 
-    <ImageButton
-        android:id="@+id/btnEditCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/baseline_edit_24"
-        android:contentDescription="Edit"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        app:tint="@color/success" />
+        <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:orientation="horizontal"
+            >
 
-    <ImageButton
-        android:id="@+id/btnDeleteCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/baseline_delete_24"
-        android:contentDescription="Delete"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        app:tint="@color/danger"/>
-</LinearLayout>
+            <ImageButton
+                android:id="@+id/btnEditCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit"
+                android:src="@drawable/baseline_edit_24"
+                app:tint="@color/success" />
+
+            <ImageButton
+                android:id="@+id/btnDeleteCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete"
+                android:src="@drawable/baseline_delete_24"
+                app:tint="@color/danger" />
+        </LinearLayout>
+    </TableRow>
+</TableLayout>

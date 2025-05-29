@@ -7,9 +7,57 @@
 
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Table Header -->
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#E0E0E0"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="No" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="Name" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="Username" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="Level" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="#" />
+        </TableRow>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerUsers"
@@ -19,34 +67,33 @@
 
     <LinearLayout
         android:id="@+id/emptyView"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <ImageView
-            android:src="@drawable/baseline_move_to_inbox_24"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            />
+            android:src="@drawable/baseline_move_to_inbox_24" />
 
         <TextView
             android:id="@+id/tvEmptyText"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddUser"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Add Users"
-        android:src="@drawable/baseline_add_24"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:backgroundTint="@color/blue" />
+        android:backgroundTint="@color/blue"
+        android:contentDescription="Add Users"
+        android:src="@drawable/baseline_add_24" />
 </FrameLayout>

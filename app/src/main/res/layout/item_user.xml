@@ -1,67 +1,76 @@
-<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="8dp"
-    android:background="@drawable/table_row_background">
+    android:background="@drawable/table_row_background"
+    >
 
-    <TextView
-        android:id="@+id/txtUserNumber"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="1."
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
         android:gravity="center"
-        android:padding="4dp"/>
-
-    <TextView
-        android:id="@+id/txtName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="3"
-        android:text="User Name"
-        android:padding="4dp"/>
-
-    <TextView
-        android:id="@+id/txtUserName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="3"
-        android:text="username"
-        android:padding="4dp"/>
-
-    <TextView
-        android:id="@+id/txtUserLevel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="2"
-        android:text="Level"
-        android:gravity="center"
-        android:padding="4dp"/>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="2"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="4dp">
-
-        <ImageButton
-            android:id="@+id/btnEditUser"
-            android:layout_width="wrap_content"
+        android:paddingVertical="8dp">
+        <!-- Column 1: No -->
+        <TextView
+            android:id="@+id/txtUserNumber"
             android:layout_height="wrap_content"
-            android:src="@drawable/baseline_edit_24"
-            android:contentDescription="Edit"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:tint="@color/success" />
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="1." />
 
-        <ImageButton
-            android:id="@+id/btnDeleteUser"
-            android:layout_width="wrap_content"
+        <!-- Column 2: Name -->
+        <TextView
+            android:id="@+id/txtName"
+            android:gravity="center"
             android:layout_height="wrap_content"
-            android:src="@drawable/baseline_delete_24"
-            android:contentDescription="Delete"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:tint="@color/danger" />
-    </LinearLayout>
-</TableRow>
+            android:layout_weight="3"
+            android:padding="4dp"
+            android:text="User Name" />
+
+        <!-- Column 3: Username -->
+        <TextView
+            android:id="@+id/txtUserName"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:padding="4dp"
+            android:text="username" />
+
+        <!-- Column 4: Level -->
+        <TextView
+            android:id="@+id/txtUserLevel"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="Level" />
+
+        <!-- Column 5: Actions -->
+        <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageButton
+                android:id="@+id/btnEditUser"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit"
+                android:src="@drawable/baseline_edit_24"
+                app:tint="@color/success" />
+
+            <ImageButton
+                android:id="@+id/btnDeleteUser"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete"
+                android:src="@drawable/baseline_delete_24"
+                app:tint="@color/danger" />
+        </LinearLayout>
+    </TableRow>
+</TableLayout>

@@ -1,7 +1,9 @@
 package com.example.ardimart;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -17,6 +19,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import com.example.ardimart.config.DatabaseHelper;
 
@@ -86,13 +89,11 @@ public class EditUser extends AppCompatActivity {
         String passwordConfirm = txtPasswordConfirm.getText().toString().trim();
         String level = txtLevel.getSelectedItem().toString();
 
-        // Basic validation
         if (name.isEmpty() || username.isEmpty() || level.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields and select a level", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // If password is typed, confirm password must match
         if (!password.isEmpty() && !password.equals(passwordConfirm)) {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
             return;
@@ -103,6 +104,18 @@ public class EditUser extends AppCompatActivity {
                 DatabaseHelper dbHelper = new DatabaseHelper(EditUser.this);
                 dbHelper.copyDatabaseIfNeeded();
                 SQLiteDatabase db = dbHelper.getConnection();
+
+                Cursor cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", new String[]{username});
+                if (cursor.moveToFirst()) {
+                    int foundUserId = cursor.getInt(0);
+                    int currentUserId = user.getId();
+                    if (foundUserId != currentUserId) {
+                        runOnUiThread(() -> Toast.makeText(EditUser.this, "Username already exists", Toast.LENGTH_SHORT).show());
+                        cursor.close();
+                        return;
+                    }
+                }
+                cursor.close();
 
                 String sql;
                 SQLiteStatement stmt;
