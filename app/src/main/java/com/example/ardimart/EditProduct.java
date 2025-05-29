@@ -145,11 +145,10 @@ public class EditProduct extends AppCompatActivity {
         String stockStr = txtStock.getText().toString().trim();
         String purchasePriceStr = txtPurchasePrice.getText().toString().trim();
         String sellPriceStr = txtSellPrice.getText().toString().trim();
+        Category selectedCategory = (Category) spinnerCategory.getSelectedItem();
+        int categoryId = selectedCategory.getId();
 
-
-        int categoryId = product.getCategoryId();
-
-        if (name.isEmpty() || units.isEmpty() || stockStr.isEmpty() || purchasePriceStr.isEmpty() || sellPriceStr.isEmpty()) {
+        if (name.isEmpty() || units.isEmpty() || stockStr.isEmpty() || purchasePriceStr.isEmpty() || sellPriceStr.isEmpty() || selectedCategory.equals("Choose Category")) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -168,7 +167,7 @@ public class EditProduct extends AppCompatActivity {
                 SQLiteStatement stmt = db.compileStatement(sql);
                 stmt.bindString(1, name);
                 stmt.bindString(2, units);
-                stmt.bindLong(3, categoryId);
+                stmt.bindString(3, String.valueOf(categoryId));
                 stmt.bindDouble(4, stocks);
                 stmt.bindDouble(5, purchasePrice);
                 stmt.bindDouble(6, sellPrice);
