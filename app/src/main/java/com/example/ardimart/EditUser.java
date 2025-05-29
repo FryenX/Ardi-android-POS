@@ -3,6 +3,7 @@ package com.example.ardimart;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,6 +16,7 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.example.ardimart.config.DatabaseHelper;
 
@@ -31,6 +33,10 @@ public class EditUser extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_user);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Edit User");
 
         user = (User) getIntent().getSerializableExtra("user");
         txtName = findViewById(R.id.txtName);
@@ -65,6 +71,14 @@ public class EditUser extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();  // or
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     private void updateUser() {
         String name = txtName.getText().toString().trim();
         String username = txtUserName.getText().toString().trim();

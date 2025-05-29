@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal">
+
+                <!-- Image Preview -->
+                <ImageView
+                    android:id="@+id/imgPreview"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_image_placeholder"
+                    android:contentDescription="Product Image Preview" />
+
+                <!-- Edit Image Button -->
+                <Button
+                    android:id="@+id/btnChangeImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Change Image"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/blue"
+                    android:textColor="@android:color/white" />
+
+                <!-- Barcode (readonly) -->
+                <EditText
+                    android:id="@+id/txtBarcode"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:hint="Barcode"
+                    android:enabled="false"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp"
+                    android:inputType="text" />
+
+                <!-- Name -->
+                <EditText
+                    android:id="@+id/txtName"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:hint="Product Name"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:inputType="text" />
+
+                <!-- Units (as Spinner) -->
+                <Spinner
+                    android:id="@+id/spinnerUnits"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp" />
+
+                <!-- Stocks -->
+                <EditText
+                    android:id="@+id/txtStock"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:hint="Stocks"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:inputType="numberDecimal" />
+
+                <!-- Purchase Price -->
+                <EditText
+                    android:id="@+id/txtPurchasePrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:hint="Purchase Price"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:inputType="numberDecimal" />
+
+                <!-- Sell Price -->
+                <EditText
+                    android:id="@+id/txtSellPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:hint="Sell Price"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:inputType="numberDecimal" />
+
+                <!-- Category Spinner -->
+                <Spinner
+                    android:id="@+id/spinnerCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/custom_edittext"
+                    android:padding="10dp" />
+
+                <!-- Save Button -->
+                <Button
+                    android:id="@+id/btnSaveProduct"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Update Product"
+                    android:backgroundTint="@color/blue"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

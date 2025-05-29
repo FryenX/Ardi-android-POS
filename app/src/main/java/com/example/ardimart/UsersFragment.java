@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -54,39 +55,40 @@ public class UsersFragment extends Fragment {
             @Override
             public void onEdit(User user) {
                 Intent intent = new Intent(getContext(), EditUser.class);
-                intent.putExtra("user", user); // Send user object
+                intent.putExtra("user", user);
                 startActivityForResult(intent, ADD_USER_REQUEST_CODE);
             }
 
             @Override
             public void onDelete(User user) {
-                Executor executor = Executors.newSingleThreadExecutor();
-                executor.execute(() -> {
-                    SQLiteDatabase db = null;
-                    try {
-                        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-                        dbHelper.copyDatabaseIfNeeded();
-                        db = dbHelper.getConnection();
+                new AlertDialog.Builder(getContext()).setTitle("Confirm Deletion").setMessage("Are you sure you want to delete user: " + user.getName() + "?").setPositiveButton("Delete", (dialog, which) -> {
+                    Executor executor = Executors.newSingleThreadExecutor();
+                    executor.execute(() -> {
+                        SQLiteDatabase db = null;
+                        try {
+                            DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+                            dbHelper.copyDatabaseIfNeeded();
+                            db = dbHelper.getConnection();
 
-                        int rowsDeleted = db.delete("users", "id = ?", new String[]{String.valueOf(user.getId())});
+                            int rowsDeleted = db.delete("users", "id = ?", new String[]{String.valueOf(user.getId())});
 
-                        requireActivity().runOnUiThread(() -> {
-                            if (rowsDeleted > 0) {
-                                Toast.makeText(getContext(), "User deleted", Toast.LENGTH_SHORT).show();
-                                loadUsersFromDatabase();
-                            } else {
-                                Toast.makeText(getContext(), "Failed to delete user", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(getContext(), "Error deleting user: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                        );
-                    } finally {
-                        if (db != null && db.isOpen()) db.close();
-                    }
-                });
+                            requireActivity().runOnUiThread(() -> {
+                                if (rowsDeleted > 0) {
+                                    Toast.makeText(getContext(), "User deleted", Toast.LENGTH_SHORT).show();
+                                    loadUsersFromDatabase();
+                                } else {
+                                    Toast.makeText(getContext(), "Failed to delete user", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error deleting user: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        } finally {
+                            if (db != null && db.isOpen()) db.close();
+                        }
+                    });
+                }).setNegativeButton("Cancel", null).show();
             }
+
         });
 
         recyclerUsers.setAdapter(userAdapter);
@@ -139,9 +141,7 @@ public class UsersFragment extends Fragment {
                 });
 
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Error loading users: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error loading users: " + e.getMessage(), Toast.LENGTH_LONG).show());
             } finally {
                 if (cursor != null) cursor.close();
                 if (db != null && db.isOpen()) db.close();
@@ -155,6 +155,7 @@ public class UsersFragment extends Fragment {
             loadUsersFromDatabase();
         }
     }
+
 
     private void showEmptyView(String message) {
         LinearLayout emptyView = requireView().findViewById(R.id.emptyView);

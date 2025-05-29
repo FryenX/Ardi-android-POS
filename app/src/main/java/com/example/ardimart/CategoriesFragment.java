@@ -50,12 +50,13 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
         super.onCreate(savedInstanceState);
 
     }
+
     private RecyclerView recyclerCategories;
     private CategoryAdapter categoryAdapter;
     private View emptyView;
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_categories, container, false);
         emptyView = view.findViewById(R.id.emptyView);
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
@@ -72,51 +73,45 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
                 txtCategoryName.requestFocus();
                 txtCategoryName.selectAll();
 
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Edit Category")
-                        .setView(dialogView)
-                        .setPositiveButton("Save", (dialog, which) -> {
-                            String newName = txtCategoryName.getText().toString().trim();
-                            if (!newName.isEmpty()) {
-                                updateCategory(category.getId(), newName);
-                            } else {
-                                Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
+                new AlertDialog.Builder(getContext()).setTitle("Edit Category").setView(dialogView).setPositiveButton("Save", (dialog, which) -> {
+                    String newName = txtCategoryName.getText().toString().trim();
+                    if (!newName.isEmpty()) {
+                        updateCategory(category.getId(), newName);
+                    } else {
+                        Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                    }
+                }).setNegativeButton("Cancel", null).show();
             }
 
-            @Override
             public void onDelete(Category category) {
-                Executor executor = Executors.newSingleThreadExecutor();
-                executor.execute(() -> {
-                    SQLiteDatabase db = null;
-                    try {
-                        DatabaseHelper dbHelper = new DatabaseHelper(getContext());
-                        dbHelper.copyDatabaseIfNeeded();
-                        db = dbHelper.getConnection();
+                new AlertDialog.Builder(getContext()).setTitle("Confirm Deletion").setMessage("Are you sure you want to delete category: " + category.getName() + "?").setPositiveButton("Delete", (dialog, which) -> {
+                    Executor executor = Executors.newSingleThreadExecutor();
+                    executor.execute(() -> {
+                        SQLiteDatabase db = null;
+                        try {
+                            DatabaseHelper dbHelper = new DatabaseHelper(getContext());
+                            dbHelper.copyDatabaseIfNeeded();
+                            db = dbHelper.getConnection();
 
-                        int rowsDeleted = db.delete("categories", "id = ?", new String[]{String.valueOf(category.getId())});
+                            int rowsDeleted = db.delete("categories", "id = ?", new String[]{String.valueOf(category.getId())});
 
-                        requireActivity().runOnUiThread(() -> {
-                            if (rowsDeleted > 0) {
-                                Toast.makeText(getContext(), "Category deleted", Toast.LENGTH_SHORT).show();
-                                loadCategoriesFromDatabase();  // Refresh list
-                            } else {
-                                Toast.makeText(getContext(), "Failed to delete category", Toast.LENGTH_SHORT).show();
+                            requireActivity().runOnUiThread(() -> {
+                                if (rowsDeleted > 0) {
+                                    Toast.makeText(getContext(), "Category deleted", Toast.LENGTH_SHORT).show();
+                                    loadCategoriesFromDatabase();  // Refresh list
+                                } else {
+                                    Toast.makeText(getContext(), "Failed to delete category", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error deleting category: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        } finally {
+                            if (db != null && db.isOpen()) {
+                                db.close();
                             }
-                        });
-                    } catch (Exception e) {
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(getContext(), "Error deleting category: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                        );
-                    } finally {
-                        if (db != null && db.isOpen()) {
-                            db.close();
                         }
-                    }
-                });
+                    });
+                }).setNegativeButton("Cancel", null).show();
             }
         });
 
@@ -164,15 +159,14 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
                 });
 
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Error loading categories: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error loading categories: " + e.getMessage(), Toast.LENGTH_LONG).show());
             } finally {
                 if (cursor != null) cursor.close();
                 if (db != null && db.isOpen()) db.close();
             }
         });
     }
+
     private void showEmptyView(String message) {
         LinearLayout emptyView = requireView().findViewById(R.id.emptyView);
         TextView tvEmptyText = requireView().findViewById(R.id.tvEmptyText);
@@ -180,10 +174,12 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
         emptyView.setVisibility(View.VISIBLE);
         tvEmptyText.setText(message);
     }
+
     private void hideEmptyView() {
         LinearLayout emptyView = requireView().findViewById(R.id.emptyView);
         emptyView.setVisibility(View.GONE);
     }
+
     @Override
     public void onCategoryAdded(Category category) {
         loadCategoriesFromDatabase();
@@ -213,9 +209,7 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
                 });
 
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Error updating category: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error updating category: " + e.getMessage(), Toast.LENGTH_LONG).show());
             } finally {
                 if (db != null && db.isOpen()) db.close();
             }

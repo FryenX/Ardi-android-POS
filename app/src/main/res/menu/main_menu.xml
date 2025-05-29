@@ -6,6 +6,10 @@
             android:icon="@drawable/baseline_home_24"
             android:title="Home"
             tools:ignore="HardcodedText" />
+        <item android:id="@+id/products"
+            android:icon="@drawable/baseline_assignment_24"
+            android:title="Products"
+            tools:ignore="HardcodedText"/>
         <item android:id="@+id/categories"
             android:icon="@drawable/baseline_format_list_bulleted_24"
             android:title="Categories"

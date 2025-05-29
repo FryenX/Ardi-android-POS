@@ -131,6 +131,7 @@
                     android:id="@+id/btnSaveUser"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:text="Add User"
                     android:layout_marginTop="24dp"
                     android:backgroundTint="@color/blue"
                     android:textColor="@android:color/white" />
@@ -138,6 +139,5 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <!-- Toolbar with back button -->
 
 </androidx.drawerlayout.widget.DrawerLayout>
