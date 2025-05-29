@@ -66,6 +66,25 @@ public class LoginActivity extends AppCompatActivity {
         String username = txtUsername.getText().toString();
         String password = txtPassword.getText().toString();
 
+        if(username.isEmpty() && password.isEmpty())
+        {
+            Toast.makeText(LoginActivity.this, "All field must be filled", Toast.LENGTH_SHORT).show();
+            txtUsername.requestFocus();
+            return;
+        }
+
+        if (username.isEmpty()) {
+            Toast.makeText(LoginActivity.this, "Username cannot be empty", Toast.LENGTH_SHORT).show();
+            txtUsername.requestFocus();
+            return;
+        }
+
+        if (password.isEmpty()) {
+            Toast.makeText(LoginActivity.this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
+            txtPassword.requestFocus();
+            return;
+        }
+
         executor.execute(() -> {
             try {
                 DatabaseHelper dbHelper = new DatabaseHelper(LoginActivity.this);
@@ -78,13 +97,14 @@ public class LoginActivity extends AppCompatActivity {
                     String level = cursor.getString(cursor.getColumnIndexOrThrow("levels"));
                     String uuid = cursor.getString(cursor.getColumnIndexOrThrow("uuid"));
                     String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
 
                     if (BCrypt.checkpw(password, dbPassword)) {
                         runOnUiThread(() -> {
                             Toast.makeText(LoginActivity.this, "Login Succesful!", Toast.LENGTH_SHORT).show();
 
                             SessionManager sessionManager = new SessionManager(LoginActivity.this);
-                            sessionManager.createLoginSession(uuid, name, username, level);
+                            sessionManager.createLoginSession(id, uuid, name, username, level);
 
                             Intent intent;
                             intent = new Intent(LoginActivity.this, MainActivity.class);

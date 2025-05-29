@@ -19,6 +19,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.ardimart.config.SessionManager;
 import com.google.android.material.navigation.NavigationView;
+
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     ActionBarDrawerToggle drawerToggle;
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (drawerToggle.onOptionsItemSelected(item)) {
@@ -98,9 +100,19 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     break;
+                case R.id.users:
+                    if ("Admin".equalsIgnoreCase(level)) {
+                        replaceFragment(new UsersFragment(), "Users");
+                    } else if ("Cashier".equalsIgnoreCase(level)) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Error")
+                                .setMessage("You do not have permission to access this section.")
+                                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                                .show();
+                    }
+                    break;
                 case R.id.categories:
-                    if("Admin".equalsIgnoreCase(level))
-                    {
+                    if ("Admin".equalsIgnoreCase(level)) {
                         replaceFragment(new CategoriesFragment(), "Categories");
                     } else if ("Cashier".equalsIgnoreCase(level)) {
                         new AlertDialog.Builder(this)
@@ -130,8 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(drawerLayout.isDrawerOpen(GravityCompat.START))
-        {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
