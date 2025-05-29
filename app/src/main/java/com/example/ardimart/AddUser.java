@@ -41,9 +41,9 @@ public class AddUser extends AppCompatActivity {
         setContentView(R.layout.activity_add_user);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Add User");
+
         txtName = findViewById(R.id.txtName);
         txtUsername = findViewById(R.id.txtUserName);
         txtPassword = findViewById(R.id.txtPassword);
