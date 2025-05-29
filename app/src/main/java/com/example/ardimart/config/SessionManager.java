@@ -11,6 +11,7 @@ import com.example.ardimart.LoginActivity;
 public class SessionManager extends AppCompatActivity {
     private static final String PREF_NAME = "LoginSession";
     private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    private static final String KEY_ID = "id";
     private static final String KEY_UUID = "uuid";
     private static final String KEY_NAME = "name";
     private static final String KEY_USERNAME = "username";
@@ -26,8 +27,9 @@ public class SessionManager extends AppCompatActivity {
         editor = pref.edit();
     }
 
-    public void createLoginSession(String uuid, String name, String username, String level) {
+    public void createLoginSession(int id, String uuid, String name, String username, String level) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putInt(KEY_ID, id);
         editor.putString(KEY_UUID, uuid);
         editor.putString(KEY_NAME, name);
         editor.putString(KEY_USERNAME, username);
@@ -38,7 +40,9 @@ public class SessionManager extends AppCompatActivity {
     public boolean isLoggedIn() {
         return pref.getBoolean(KEY_IS_LOGGED_IN, false);
     }
-
+    public int getId() {
+        return pref.getInt(KEY_ID, -1);
+    }
     public String getUuid() {
         return pref.getString(KEY_UUID, null);
     }

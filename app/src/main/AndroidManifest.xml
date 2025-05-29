@@ -24,8 +24,9 @@
         </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
-        <activity android:name=".AdminDashboardActivity" />
-        <activity android:name=".CashierDashboardActivity" />
+        <activity android:name=".AddUser" />
+        <activity android:name=".EditUser" />
+
     </application>
 
 </manifest>

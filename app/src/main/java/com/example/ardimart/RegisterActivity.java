@@ -83,7 +83,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         Spinner spinner = findViewById(R.id.txtLevel);
 
-        String[] levels = {"Pilih level", "Admin", "Cashier"};
+        String[] levels = {"Choose Level", "Admin", "Cashier"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, levels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -94,7 +94,6 @@ public class RegisterActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedLevel = parent.getItemAtPosition(position).toString();
                 if (position == 0) {
-                    // User selected "Pilih level" — treat as null
                     selectedLevel = null;
                 }
 
@@ -150,10 +149,8 @@ public class RegisterActivity extends AppCompatActivity {
                 cursor.close();
 
                 String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-
                 String uuid = UUID.randomUUID().toString();
-
-                String datetime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
+                @SuppressLint("SimpleDateFormat") String datetime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
 
                 String sql = "INSERT INTO users (uuid, name, levels, username, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 SQLiteStatement stmt = db.compileStatement(sql);
@@ -164,20 +161,23 @@ public class RegisterActivity extends AppCompatActivity {
                 stmt.bindString(5, hashedPassword);
                 stmt.bindString(6, datetime);
                 stmt.bindString(7, datetime);
-                stmt.executeInsert();
-                runOnUiThread(() -> {
-                    // Create session
-                    SessionManager session = new SessionManager(RegisterActivity.this);
-                    session.createLoginSession(uuid, name, username, level);
 
+                long rowId = stmt.executeInsert(); // this returns the ID of the inserted row
+                int id = (int) rowId; // cast to int since our user ID is expected to be int
+
+                runOnUiThread(() -> {
+                    SessionManager session = new SessionManager(RegisterActivity.this);
+                    session.createLoginSession(id, uuid, name, username, level);
+
+                    Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
                 });
-                runOnUiThread(() -> Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show());
-            }catch (Exception e) {
+            } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(RegisterActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
             }
         });
+
     }
 }
