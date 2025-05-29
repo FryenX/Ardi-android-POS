@@ -75,7 +75,7 @@ public class LoginActivity extends AppCompatActivity {
                 Cursor cursor = db.rawQuery("SELECT * FROM users WHERE username = ?", new String[]{username});
                 if(cursor.moveToFirst()) {
                     String dbPassword = cursor.getString(cursor.getColumnIndexOrThrow("password"));
-                    String level = cursor.getString(cursor.getColumnIndexOrThrow("level_id"));
+                    String level = cursor.getString(cursor.getColumnIndexOrThrow("levels"));
                     String uuid = cursor.getString(cursor.getColumnIndexOrThrow("uuid"));
                     String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
 

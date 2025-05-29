@@ -32,7 +32,7 @@ public class SessionManager extends AppCompatActivity {
         editor.putString(KEY_NAME, name);
         editor.putString(KEY_USERNAME, username);
         editor.putString(KEY_LEVEL, level);
-        editor.apply(); // or editor.commit();
+        editor.apply();
     }
 
     public boolean isLoggedIn() {
