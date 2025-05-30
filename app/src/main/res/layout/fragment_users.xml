@@ -11,6 +11,16 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <EditText
+            android:id="@+id/searchInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search users..."
+            android:drawableStart="@drawable/baseline_search_24"
+            android:inputType="text"
+            android:padding="8dp"
+            />
+
         <!-- Table Header -->
         <TableRow
             android:layout_width="match_parent"
@@ -27,28 +37,40 @@
                 android:text="No" />
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:gravity="center"
-                android:textStyle="bold"
-                android:text="Name" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:gravity="center"
-                android:textStyle="bold"
-                android:text="Username" />
-
-            <TextView
+                android:id="@+id/sortName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:gravity="center"
                 android:textStyle="bold"
-                android:text="Level" />
+                android:text="Name"
+                android:clickable="true"
+                android:focusable="true"
+                android:drawableEnd="@drawable/ic_sort_none"/>
+
+            <TextView
+                android:id="@+id/sortUsername"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="Username"
+                android:clickable="true"
+                android:focusable="true"
+                android:drawableEnd="@drawable/ic_sort_none"/>
+
+            <TextView
+                android:id="@+id/sortLevel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:text="Level"
+                android:clickable="true"
+                android:focusable="true"
+                android:drawableEnd="@drawable/ic_sort_none"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -62,7 +84,35 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerUsers"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/btnPrev"
+                android:text="Previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/txtPageIndicator"
+                android:text="Page 1 of 1"
+                android:layout_marginHorizontal="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnNext"
+                android:text="Next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -91,9 +141,10 @@
         android:id="@+id/btnAddUser"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="Add User"
+        android:src="@drawable/baseline_add_24"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:backgroundTint="@color/blue"
-        android:contentDescription="Add Users"
-        android:src="@drawable/baseline_add_24" />
+        android:layout_marginBottom="70dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/blue" />
 </FrameLayout>

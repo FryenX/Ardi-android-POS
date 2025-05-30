@@ -13,9 +13,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -52,9 +56,25 @@ public class ProductsFragment extends Fragment {
         emptyView = view.findViewById(R.id.emptyView);
         recyclerProducts = view.findViewById(R.id.recyclerProducts);
         recyclerProducts.setLayoutManager(new LinearLayoutManager(getContext()));
-        productAdapter = new ProductAdapter(new ArrayList<>());
+        productAdapter = new ProductAdapter();
         recyclerProducts.setAdapter(productAdapter);
 
+        TextView txtPageInfo = view.findViewById(R.id.txtPageInfo);
+        Button btnPrevPage = view.findViewById(R.id.btnPrevPage);
+        Button btnNextPage = view.findViewById(R.id.btnNextPage);
+        EditText searchInput = view.findViewById(R.id.searchInput);
+
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                productAdapter.filter(s.toString().trim());
+                updatePageInfo(txtPageInfo);
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
         productAdapter.setListener(new ProductAdapter.OnProductActionListener() {
             @Override
             public void onEdit(Product product) {
@@ -168,6 +188,22 @@ public class ProductsFragment extends Fragment {
 
         });
 
+        btnPrevPage.setOnClickListener(v -> {
+            int currentPage = productAdapter.getCurrentPage();
+            if (currentPage > 0) {
+                productAdapter.setPage(currentPage - 1);
+                updatePageInfo(txtPageInfo);
+            }
+        });
+
+        btnNextPage.setOnClickListener(v -> {
+            int currentPage = productAdapter.getCurrentPage();
+            if (currentPage < productAdapter.getTotalPages() - 1) {
+                productAdapter.setPage(currentPage + 1);
+                updatePageInfo(txtPageInfo);
+            }
+        });
+
         FloatingActionButton btnAddProduct = view.findViewById(R.id.btnAddProduct);
         btnAddProduct.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), AddProduct.class);
@@ -178,6 +214,11 @@ public class ProductsFragment extends Fragment {
         return view;
     }
 
+    private void updatePageInfo(TextView txtPageInfo) {
+        int current = productAdapter.getCurrentPage() + 1;
+        int total = productAdapter.getTotalPages();
+        txtPageInfo.setText("Page " + current + "/" + total);
+    }
     private void loadProductsFromDatabase() {
         Executors.newSingleThreadExecutor().execute(() -> {
             List<Product> products = new ArrayList<>();

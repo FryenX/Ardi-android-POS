@@ -13,8 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
-    private List<Category> categories = new ArrayList<>();
+    private List<Category> fullList = new ArrayList<>();
+    private List<Category> filteredList = new ArrayList<>();
+    private List<Category> pagedList = new ArrayList<>();
     private OnCategoryActionListener listener;
+    private static final int PAGE_SIZE = 10;
+    private int currentPage = 0;
+
 
     public interface OnCategoryActionListener {
         void onEdit(Category category);
@@ -25,22 +30,55 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         this.listener = listener;
     }
 
-    public void setCategories(List<Category> newCategories) {
-        this.categories = newCategories;
-        notifyDataSetChanged();
+    public void setCategories(List<Category> categories) {
+        this.fullList = new ArrayList<>(categories);
+        this.filteredList = new ArrayList<>(categories);
+        setPage(0);
+    }
+    public void setPage(int page) {
+        int fromIndex = page * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, filteredList.size());
+        if (fromIndex <= toIndex) {
+            this.currentPage = page;
+            this.pagedList = filteredList.subList(fromIndex, toIndex);
+            notifyDataSetChanged();
+        }
+    }
+
+    public int getTotalPages() {
+        return (int) Math.ceil((double) filteredList.size() / PAGE_SIZE);
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
+    public void filter(String keyword) {
+        if (keyword.isEmpty()) {
+            filteredList = new ArrayList<>(fullList);
+        } else {
+            List<Category> result = new ArrayList<>();
+            for (Category cat : fullList) {
+                if (cat.getName().toLowerCase().contains(keyword.toLowerCase())) {
+                    result.add(cat);
+                }
+            }
+            filteredList = result;
+        }
+        setPage(0);
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public CategoryAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Category category = categories.get(position);
-        holder.txtCategoryNumber.setText((position + 1) + ".");
+    public void onBindViewHolder(@NonNull CategoryAdapter.ViewHolder holder, int position) {
+        Category category = pagedList.get(position);
+        holder.txtCategoryNumber.setText((position + 1 + (currentPage * PAGE_SIZE)) + ".");
         holder.txtName.setText(category.getName());
 
         holder.btnEdit.setOnClickListener(v -> {
@@ -54,7 +92,15 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return categories.size();
+        return pagedList.size();
+    }
+
+    public Category getItem(int position) {
+        return filteredList.get(position);
+    }
+
+    public List<Category> getFullList() {
+        return new ArrayList<>(fullList);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -70,3 +116,4 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         }
     }
 }
+

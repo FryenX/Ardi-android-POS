@@ -35,8 +35,8 @@
                 <!-- Image Preview -->
                 <ImageView
                     android:id="@+id/imgPreview"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:layout_width="120pt"
+                    android:layout_height="120pt"
                     android:layout_marginTop="16dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_image_placeholder"
@@ -59,6 +59,8 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="16dp"
                     android:hint="Barcode"
+                    android:drawableStart="@drawable/baseline_qr_code_2_24"
+                    android:drawablePadding="10dp"
                     android:enabled="false"
                     android:background="@drawable/custom_edittext"
                     android:padding="10dp"
@@ -71,6 +73,8 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="16dp"
                     android:hint="Product Name"
+                    android:drawableStart="@drawable/baseline_shopping_cart_24"
+                    android:drawablePadding="10dp"
                     android:background="@drawable/custom_edittext"
                     android:padding="10dp"
                     android:textColor="@color/black"
@@ -94,6 +98,8 @@
                     android:hint="Stocks"
                     android:background="@drawable/custom_edittext"
                     android:padding="10dp"
+                    android:drawableStart="@drawable/baseline_inventory_2_24"
+                    android:drawablePadding="10dp"
                     android:textColor="@color/black"
                     android:inputType="numberDecimal" />
 
@@ -106,6 +112,8 @@
                     android:hint="Purchase Price"
                     android:background="@drawable/custom_edittext"
                     android:padding="10dp"
+                    android:drawableStart="@drawable/ic_rp"
+                    android:drawablePadding="10dp"
                     android:textColor="@color/black"
                     android:inputType="numberDecimal" />
 
@@ -118,6 +126,8 @@
                     android:hint="Sell Price"
                     android:background="@drawable/custom_edittext"
                     android:padding="10dp"
+                    android:drawableStart="@drawable/ic_rp"
+                    android:drawablePadding="10dp"
                     android:textColor="@color/black"
                     android:inputType="numberDecimal" />
 

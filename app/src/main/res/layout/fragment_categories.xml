@@ -28,21 +28,28 @@
             android:paddingVertical="8dp">
 
             <TextView
+                android:id="@+id/headerNo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:gravity="center"
-                android:textStyle="bold"
                 android:text="No"
-                />
+                android:textStyle="bold"
+                android:drawableEnd="@drawable/ic_sort_none"
+                android:drawablePadding="4dp"/>
 
             <TextView
+                android:id="@+id/headerName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="8"
                 android:gravity="start"
+                android:text="Name"
                 android:textStyle="bold"
-                android:text="Name" />
+                android:clickable="true"
+                android:focusable="true"
+                android:drawableEnd="@drawable/ic_sort_none"
+                android:drawablePadding="4dp"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -56,7 +63,35 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerCategories"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/btnPrev"
+                android:text="Previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/txtPageIndicator"
+                android:text="Page 1 of 1"
+                android:layout_marginHorizontal="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnNext"
+                android:text="Next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -90,7 +125,8 @@
         android:contentDescription="Add Category"
         android:src="@drawable/baseline_add_24"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_marginBottom="70dp"
+        android:layout_marginEnd="16dp"
         android:backgroundTint="@color/blue" />
 
 </FrameLayout>

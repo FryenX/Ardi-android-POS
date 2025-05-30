@@ -12,9 +12,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +27,8 @@ import com.example.ardimart.config.DatabaseHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -31,6 +37,12 @@ public class UsersFragment extends Fragment {
 
     private RecyclerView recyclerUsers;
     private UserAdapter userAdapter;
+    private Button btnPrev;
+    private Button btnNext;
+    private TextView txtPageIndicator;
+    private boolean sortByNameAsc = true;
+    private boolean sortByUserName = true;
+    private boolean sortByLevel = true;
     private View emptyView;
 
     public UsersFragment() {
@@ -50,7 +62,36 @@ public class UsersFragment extends Fragment {
         recyclerUsers = view.findViewById(R.id.recyclerUsers);
         recyclerUsers.setLayoutManager(new LinearLayoutManager(getContext()));
         userAdapter = new UserAdapter();
+        EditText searchInput = view.findViewById(R.id.searchInput);
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                userAdapter.filter(s.toString());
+                updatePageIndicator();
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
 
+
+        btnPrev = view.findViewById(R.id.btnPrev);
+        btnNext = view.findViewById(R.id.btnNext);
+        txtPageIndicator = view.findViewById(R.id.txtPageIndicator);
+
+        btnPrev.setOnClickListener(v -> {
+            int currentPage = userAdapter.getCurrentPage();
+            if (currentPage > 0) {
+                userAdapter.setPage(currentPage - 1);
+                updatePageIndicator();
+            }
+        });
+
+        btnNext.setOnClickListener(v -> {
+            int currentPage = userAdapter.getCurrentPage();
+            if (currentPage < userAdapter.getTotalPages() - 1) {
+                userAdapter.setPage(currentPage + 1);
+                updatePageIndicator();
+            }
+        });
         userAdapter.setListener(new UserAdapter.OnUserActionListener() {
             @Override
             public void onEdit(User user) {
@@ -88,10 +129,31 @@ public class UsersFragment extends Fragment {
                     });
                 }).setNegativeButton("Cancel", null).show();
             }
-
         });
 
         recyclerUsers.setAdapter(userAdapter);
+
+        TextView sortName = view.findViewById(R.id.sortName);
+        TextView sortUserName = view.findViewById(R.id.sortUsername);
+        TextView sortLevel = view.findViewById(R.id.sortLevel);
+
+        sortName.setOnClickListener(v -> {
+            sortByNameAsc = !sortByNameAsc;
+            updateSortIndicators(SortField.NAME, sortByNameAsc);
+            sortByName(sortByNameAsc);
+        });
+
+        sortUserName.setOnClickListener(v -> {
+            sortByUserName = !sortByUserName;
+            updateSortIndicators(SortField.USERNAME, sortByUserName);
+            sortByUserName(sortByUserName);
+        });
+
+        sortLevel.setOnClickListener(v -> {
+            sortByLevel = !sortByLevel;
+            updateSortIndicators(SortField.LEVEL, sortByLevel);
+            sortByLevel(sortByLevel);
+        });
 
         FloatingActionButton btnAddUser = view.findViewById(R.id.btnAddUser);
         btnAddUser.setOnClickListener(v -> {
@@ -104,6 +166,14 @@ public class UsersFragment extends Fragment {
         return view;
     }
 
+    private void updatePageIndicator() {
+        int currentPage = userAdapter.getCurrentPage() + 1;
+        int totalPages = userAdapter.getTotalPages();
+        txtPageIndicator.setText("Page " + currentPage + " of " + totalPages);
+
+        btnPrev.setEnabled(currentPage > 1);
+        btnNext.setEnabled(currentPage < totalPages);
+    }
     private void loadUsersFromDatabase() {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
@@ -147,6 +217,70 @@ public class UsersFragment extends Fragment {
                 if (db != null && db.isOpen()) db.close();
             }
         });
+    }
+
+    private void sortByName(boolean ascending) {
+        List<User> currentList = userAdapter.getFullList();
+        if (ascending) {
+            Collections.sort(currentList, Comparator.comparing(User::getName, String.CASE_INSENSITIVE_ORDER));
+        } else {
+            Collections.sort(currentList, (c1, c2) -> c2.getName().compareToIgnoreCase(c1.getName()));
+        }
+        userAdapter.setUsers(currentList);
+    }
+
+    private void sortByUserName(boolean ascending) {
+        List<User> currentList = userAdapter.getFullList();
+        if (ascending) {
+            Collections.sort(currentList, Comparator.comparing(User::getUserName, String.CASE_INSENSITIVE_ORDER));
+        } else {
+            Collections.sort(currentList, (c1, c2) -> c2.getUserName().compareToIgnoreCase(c1.getUserName()));
+        }
+        userAdapter.setUsers(currentList);
+    }
+
+    private void sortByLevel(boolean ascending) {
+        List<User> currentList = userAdapter.getFullList();
+        if (ascending) {
+            Collections.sort(currentList, Comparator.comparing(User::getLevel, String.CASE_INSENSITIVE_ORDER));
+        } else {
+            Collections.sort(currentList, (c1, c2) -> c2.getLevel().compareToIgnoreCase(c1.getLevel()));
+        }
+        userAdapter.setUsers(currentList);
+    }
+
+    public enum SortField {
+        NAME,
+        USERNAME,
+        LEVEL,
+        NONE
+    }
+    private void updateSortIndicators(SortField sortField, boolean ascending) {
+        TextView sortName = getView().findViewById(R.id.sortName);
+        TextView sortUserName = getView().findViewById(R.id.sortUsername);
+        TextView sortLevel = getView().findViewById(R.id.sortLevel);
+
+        int upArrow = R.drawable.baseline_arrow_drop_up_24;
+        int downArrow = R.drawable.baseline_arrow_drop_down_24;
+        int none = R.drawable.ic_sort_none;
+
+        sortName.setCompoundDrawablesWithIntrinsicBounds(0, 0, none, 0);
+        sortUserName.setCompoundDrawablesWithIntrinsicBounds(0, 0, none, 0);
+        sortLevel.setCompoundDrawablesWithIntrinsicBounds(0, 0, none, 0);
+
+        switch (sortField) {
+            case NAME:
+                sortName.setCompoundDrawablesWithIntrinsicBounds(0, 0, ascending ? upArrow : downArrow, 0);
+                break;
+            case USERNAME:
+                sortUserName.setCompoundDrawablesWithIntrinsicBounds(0, 0, ascending ? upArrow : downArrow, 0);
+                break;
+            case LEVEL:
+                sortLevel.setCompoundDrawablesWithIntrinsicBounds(0, 0, ascending ? upArrow : downArrow, 0);
+            case NONE:
+            default:
+                break;
+        }
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

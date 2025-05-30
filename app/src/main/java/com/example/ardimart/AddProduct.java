@@ -2,6 +2,7 @@ package com.example.ardimart;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,13 +39,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
 public class AddProduct extends AppCompatActivity {
-    private static final int REQUEST_CODE_PICK_IMAGE = 1;
     private ImageView imgProduct;
     private Uri selectedImageUri;
     private EditText txtBarcode, txtName, txtStocks, txtPurchasePrice, txtSellPrice;
     private Spinner spinnerUnits, spinnerCategory;
     private Button btnSelectImage;
     private Button btnSaveProduct;
+    private static final int REQUEST_CODE_PICK_IMAGE = 101;
+    private static final int REQUEST_CODE_CAMERA = 102;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
@@ -101,9 +104,26 @@ public class AddProduct extends AppCompatActivity {
         spinnerCategory.setAdapter(adapter);
 
         btnSelectImage.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
+            String[] options = {"Camera", "Gallery"};
+            new AlertDialog.Builder(this)
+                    .setTitle("Select Image Source")
+                    .setItems(options, (dialog, which) -> {
+                        if (which == 0) {
+                            // Camera option
+                            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                                startActivityForResult(cameraIntent, REQUEST_CODE_CAMERA);
+                            } else {
+                                Toast.makeText(this, "Camera not available", Toast.LENGTH_SHORT).show();
+                            }
+                        } else if (which == 1) {
+                            // Gallery option
+                            Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+                            galleryIntent.setType("image/*");
+                            startActivityForResult(galleryIntent, REQUEST_CODE_PICK_IMAGE);
+                        }
+                    })
+                    .show();
         });
 
         btnSaveProduct.setOnClickListener(v -> addProduct());
@@ -112,14 +132,41 @@ public class AddProduct extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
-            selectedImageUri = data.getData();
-            if (selectedImageUri != null) {
-                imgProduct.setImageURI(selectedImageUri);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_CODE_PICK_IMAGE && data != null) {
+                selectedImageUri = data.getData();
+                if (selectedImageUri != null) {
+                    imgProduct.setImageURI(selectedImageUri);
+                }
+            } else if (requestCode == REQUEST_CODE_CAMERA && data != null) {
+                // Camera returns a small Bitmap in extras under "data"
+                Bitmap photo = (Bitmap) data.getExtras().get("data");
+                if (photo != null) {
+                    imgProduct.setImageBitmap(photo);
+                    selectedImageUri = saveImageAndGetUri(photo);
+                }
             }
         }
     }
+    private Uri saveImageAndGetUri(Bitmap bitmap) {
+        // Create a unique file name
+        String fileName = "image_" + System.currentTimeMillis() + ".jpg";
 
+        // File in internal storage
+        File file = new File(getFilesDir(), fileName);
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            // Compress bitmap to JPEG and save to file
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        // Return the Uri from the saved file
+        return Uri.fromFile(file);
+    }
     private String getImagePath(Uri uri) {
         String fileName = "image_" + System.currentTimeMillis() + ".jpg";
         File tempFile = new File(getFilesDir(), fileName);
@@ -188,7 +235,17 @@ public class AddProduct extends AppCompatActivity {
                 dbHelper.copyDatabaseIfNeeded();
                 SQLiteDatabase db = dbHelper.getConnection();
 
-                // Adjust the table and columns based on your DB schema
+                String checkSql = "SELECT COUNT(*) FROM products WHERE barcode = ?";
+                SQLiteStatement checkStmt = db.compileStatement(checkSql);
+                checkStmt.bindString(1, barcode);
+                long count = checkStmt.simpleQueryForLong();
+
+                if (count > 0) {
+                    // Barcode exists, show error on UI thread
+                    runOnUiThread(() -> Toast.makeText(AddProduct.this, "Barcode already exists. Please use a unique barcode.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
                 String sql = "INSERT INTO products (barcode, name, units, category_id, stocks, purchase_price, sell_price, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 SQLiteStatement stmt = db.compileStatement(sql);
                 stmt.bindString(1, barcode);

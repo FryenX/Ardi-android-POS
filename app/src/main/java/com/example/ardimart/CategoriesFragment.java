@@ -10,9 +10,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -22,6 +25,8 @@ import com.example.ardimart.config.DatabaseHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -54,6 +59,11 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
     private RecyclerView recyclerCategories;
     private CategoryAdapter categoryAdapter;
     private View emptyView;
+    private boolean sortByNameAsc = true;
+
+    private Button btnPrev;
+    private Button btnNext;
+    private TextView txtPageIndicator;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -62,6 +72,48 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
         categoryAdapter = new CategoryAdapter();
+        EditText searchInput = view.findViewById(R.id.searchInput);
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                categoryAdapter.filter(s.toString());
+                updatePaginationText();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        TextView headerName = view.findViewById(R.id.headerName);
+
+        headerName.setOnClickListener(v -> {
+            sortByNameAsc = !sortByNameAsc;
+            updateSortIndicators(false, sortByNameAsc);
+            sortByName(sortByNameAsc);
+        });
+
+        btnPrev = view.findViewById(R.id.btnPrev);
+        btnNext = view.findViewById(R.id.btnNext);
+        txtPageIndicator = view.findViewById(R.id.txtPageIndicator);
+
+        btnPrev.setOnClickListener(v -> {
+            int page = categoryAdapter.getCurrentPage();
+            if (page > 0) {
+                categoryAdapter.setPage(page - 1);
+                updatePageIndicator();
+            }
+        });
+
+        btnNext.setOnClickListener(v -> {
+            int page = categoryAdapter.getCurrentPage();
+            if (page < categoryAdapter.getTotalPages() - 1) {
+                categoryAdapter.setPage(page + 1);
+                updatePageIndicator();
+            }
+        });
 
         categoryAdapter.setListener(new CategoryAdapter.OnCategoryActionListener() {
             public void onEdit(Category category) {
@@ -126,6 +178,40 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
         loadCategoriesFromDatabase();
 
         return view;
+    }
+    private void updatePaginationText() {
+        int current = categoryAdapter.getCurrentPage() + 1;
+        int total = categoryAdapter.getTotalPages();
+        txtPageIndicator.setText("Page " + current + " of " + (total == 0 ? 1 : total));
+    }
+    private void updatePageIndicator() {
+        TextView txtPageIndicator = getView().findViewById(R.id.txtPageIndicator);
+        int current = categoryAdapter.getCurrentPage() + 1;
+        int total = categoryAdapter.getTotalPages();
+        txtPageIndicator.setText("Page " + current + " of " + total);
+    }
+    private void sortByName(boolean ascending) {
+        List<Category> currentList = categoryAdapter.getFullList();
+        if (ascending) {
+            Collections.sort(currentList, Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER));
+        } else {
+            Collections.sort(currentList, (c1, c2) -> c2.getName().compareToIgnoreCase(c1.getName()));
+        }
+        categoryAdapter.setCategories(currentList);
+    }
+
+    private void updateSortIndicators(boolean sortByName, boolean ascending) {
+        TextView headerName = getView().findViewById(R.id.headerName);
+
+        int upArrow = R.drawable.baseline_arrow_drop_up_24;
+        int downArrow = R.drawable.baseline_arrow_drop_down_24;
+        int none = R.drawable.ic_sort_none;
+
+        if (sortByName) {
+            headerName.setCompoundDrawablesWithIntrinsicBounds(0, 0, none, 0);
+        } else {
+            headerName.setCompoundDrawablesWithIntrinsicBounds(0, 0, ascending ? upArrow : downArrow, 0);
+        }
     }
 
     private void loadCategoriesFromDatabase() {

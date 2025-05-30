@@ -23,7 +23,7 @@
             android:id="@+id/txtBarcode"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_weight="3"
             android:gravity="center"
             android:padding="4dp" />
 
@@ -37,12 +37,14 @@
             android:text="Product Name" />
 
         <TextView
-            android:id="@+id/txtSellPrice"
+            android:id="@+id/txtCategoryName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:padding="4dp"
-            android:text="Rp0" />
+            android:text="air"
+            android:gravity="center"
+             />
 
         <LinearLayout
             android:layout_width="0dp"

@@ -7,98 +7,122 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
-    public interface OnProductActionListener {
-        void onEdit(Product product);
-
-        void onDetail(Product product);
-
-        void onDelete(Product product);
-    }
-
-    private List<Product> productList;
+    private List<Product> fullList = new ArrayList<>();
+    private List<Product> filteredList = new ArrayList<>();
+    private List<Product> pagedList = new ArrayList<>();
+    private static final int PAGE_SIZE = 10;
+    private int currentPage = 0;
     private OnProductActionListener listener;
 
-    public ProductAdapter(List<Product> productList) {
-        this.productList = productList;
-    }
-
-    public void setProducts(List<Product> products) {
-        this.productList = products;
-        notifyDataSetChanged();
+    public interface OnProductActionListener {
+        void onEdit(Product product);
+        void onDetail(Product product);
+        void onDelete(Product product);
     }
 
     public void setListener(OnProductActionListener listener) {
         this.listener = listener;
     }
 
+    public void setProducts(List<Product> products) {
+        this.fullList = new ArrayList<>(products);
+        this.filteredList = new ArrayList<>(products);
+        setPage(0);
+    }
+
+    public void filter(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            filteredList = new ArrayList<>(fullList);
+        } else {
+            List<Product> filtered = new ArrayList<>();
+            for (Product product : fullList) {
+                if (product.getBarcode().toLowerCase().contains(keyword.toLowerCase()) ||
+                        product.getName().toLowerCase().contains(keyword.toLowerCase()) ||
+                        product.getCategoryName().toLowerCase().contains(keyword.toLowerCase())) {
+                    filtered.add(product);
+                }
+            }
+            filteredList = filtered;
+        }
+        setPage(0);
+    }
+
+    public void setPage(int page) {
+        int fromIndex = page * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, filteredList.size());
+        if (fromIndex <= toIndex) {
+            this.currentPage = page;
+            this.pagedList = filteredList.subList(fromIndex, toIndex);
+            notifyDataSetChanged();
+        }
+    }
+
+    public int getTotalPages() {
+        return (int) Math.ceil((double) filteredList.size() / PAGE_SIZE);
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
     @NonNull
     @Override
-    public ProductAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_product, parent, false);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProductAdapter.ViewHolder holder, int position) {
-        Product product = productList.get(position);
-        holder.txtProductNumber.setText(String.valueOf(position + 1));
-        holder.txtBarcode.setText(product.getBarcode());
-        holder.txtProductName.setText(product.getName());
-//        holder.txtCategory.setText(product.getCategoryName());
-//        holder.txtStock.setText(String.valueOf(product.getStocks()));
-        holder.txtSellPrice.setText(String.format("%.2f", product.getSellPrice()));
-//        String imagePath = product.getImage();
-//        if (imagePath != null && !imagePath.isEmpty()) {
-//            File imgFile = new File(imagePath);
-//            if (imgFile.exists()) {
-//                holder.imgProduct.setImageURI(Uri.fromFile(imgFile));
-//            } else {
-//                holder.imgProduct.setImageResource(R.drawable.ic_image_placeholder); // fallback image
-//            }
-//        } else {
-//            holder.imgProduct.setImageResource(R.drawable.ic_image_placeholder); // fallback image
-//        }
-        holder.btnEdit.setOnClickListener(v -> {
-            if (listener != null) listener.onEdit(product);
-        });
-
-        holder.btnDetail.setOnClickListener(v -> {
-            if (listener != null) listener.onDetail(product);
-        });
-
-        holder.btnDelete.setOnClickListener(v -> {
-            if (listener != null) listener.onDelete(product);
-        });
+    public int getItemCount() {
+        return pagedList.size();
     }
 
     @Override
-    public int getItemCount() {
-        return productList != null ? productList.size() : 0;
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Product product = pagedList.get(position);
+        holder.txtProductNumber.setText((position + 1) + ".");
+        holder.bind(product);
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtProductNumber, txtBarcode, txtProductName, txtSellPrice;
-        ImageButton btnEdit, btnDetail, btnDelete;
+    class ViewHolder extends RecyclerView.ViewHolder {
+        TextView txtProductNumber, txtName, txtBarcode, txtCategory;
+        ImageButton btnEdit, btnDelete, btnDetail;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             txtProductNumber = itemView.findViewById(R.id.txtProductNumber);
+            txtName = itemView.findViewById(R.id.txtProductName);
             txtBarcode = itemView.findViewById(R.id.txtBarcode);
-            txtProductName = itemView.findViewById(R.id.txtProductName);
-            txtSellPrice = itemView.findViewById(R.id.txtSellPrice);
+            txtCategory = itemView.findViewById(R.id.txtCategoryName);
             btnEdit = itemView.findViewById(R.id.btnEditProduct);
-            btnDetail = itemView.findViewById(R.id.btnDetailProduct);
             btnDelete = itemView.findViewById(R.id.btnDeleteProduct);
+            btnDetail = itemView.findViewById(R.id.btnDetailProduct);
+        }
+
+        void bind(Product product) {
+            txtName.setText(product.getName());
+            txtBarcode.setText(product.getBarcode());
+            txtCategory.setText(product.getCategoryName());
+
+            btnEdit.setOnClickListener(v -> {
+                if (listener != null) listener.onEdit(product);
+            });
+
+            btnDelete.setOnClickListener(v -> {
+                if (listener != null) listener.onDelete(product);
+            });
+
+            btnDetail.setOnClickListener(v -> {
+                if (listener != null) listener.onDetail(product);
+            });
         }
     }
 }

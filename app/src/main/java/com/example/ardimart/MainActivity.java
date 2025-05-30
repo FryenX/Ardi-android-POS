@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         if ("Cashier".equalsIgnoreCase(level)) {
             navigationView.getMenu().findItem(R.id.categories).setVisible(false);
             navigationView.getMenu().findItem(R.id.users).setVisible(false);
+            navigationView.getMenu().findItem(R.id.products).setVisible(false);
         } else if ("Admin".equalsIgnoreCase(level)) {
 
         }
@@ -99,6 +100,17 @@ public class MainActivity extends AppCompatActivity {
                             replaceFragment(new CashierHomeFragment(), "Home");
                             navigationView.setCheckedItem(R.id.home);
                         }
+                    }
+                    break;
+                case R.id.transactions:
+                    if ("Admin".equalsIgnoreCase(level)) {
+                        replaceFragment(new TransactionsFragment(), "Transactions");
+                    } else if ("Cashier".equalsIgnoreCase(level)) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Error")
+                                .setMessage("You do not have permission to access this section.")
+                                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                                .show();
                     }
                     break;
                 case R.id.products:

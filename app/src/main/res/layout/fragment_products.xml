@@ -11,6 +11,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <EditText
+            android:id="@+id/searchInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search products..."
+            android:drawableStart="@drawable/baseline_search_24"
+            android:inputType="text"
+            android:padding="8dp"
+            />
+
         <!-- Header row -->
         <TableRow
             android:layout_width="match_parent"
@@ -29,7 +39,7 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_weight="3"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:text="Barcode" />
@@ -48,7 +58,7 @@
                 android:layout_weight="2"
                 android:gravity="center"
                 android:textStyle="bold"
-                android:text="Price" />
+                android:text="Category" />
 
             <TextView
                 android:layout_width="0dp"
@@ -62,7 +72,36 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerProducts"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <LinearLayout
+            android:id="@+id/pageControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btnPrevPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Previous" />
+
+            <TextView
+                android:id="@+id/txtPageInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="Page 1/1" />
+
+            <Button
+                android:id="@+id/btnNextPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Next" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -95,6 +134,7 @@
         android:contentDescription="Add Product"
         android:src="@drawable/baseline_add_24"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_marginBottom="70dp"
+        android:layout_marginEnd="16dp"
         android:backgroundTint="@color/blue" />
 </FrameLayout>

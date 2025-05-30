@@ -19,7 +19,11 @@ import java.util.List;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
-    private List<User> users = new ArrayList<>();
+    private List<User> fullList = new ArrayList<>();
+    private List<User> filteredList = new ArrayList<>();
+    private List<User> pagedList = new ArrayList<>();
+    private static final int PAGE_SIZE = 10;
+    private int currentPage = 0;
     private OnUserActionListener listener;
 
     public interface OnUserActionListener {
@@ -31,9 +35,46 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         this.listener = listener;
     }
 
-    public void setUsers(List<User> newUsers) {
-        this.users = newUsers;
-        notifyDataSetChanged();
+    public void setUsers(List<User> users) {
+        this.fullList = new ArrayList<>(users);
+        this.filteredList = new ArrayList<>(users);
+        setPage(0);
+    }
+
+    public void filter(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            filteredList = new ArrayList<>(fullList);
+        } else {
+            String lowerKeyword = keyword.toLowerCase();
+            List<User> filtered = new ArrayList<>();
+            for (User user : fullList) {
+                if (user.getUserName().toLowerCase().contains(lowerKeyword) ||
+                        user.getName().toLowerCase().contains(lowerKeyword) ||
+                        user.getLevel().toLowerCase().contains(lowerKeyword)) {
+                    filtered.add(user);
+                }
+            }
+            filteredList = filtered;
+        }
+        setPage(0);
+    }
+
+    public void setPage(int page) {
+        int fromIndex = page * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, filteredList.size());
+        if (fromIndex <= toIndex) {
+            this.currentPage = page;
+            this.pagedList = filteredList.subList(fromIndex, toIndex);
+            notifyDataSetChanged();
+        }
+    }
+
+    public int getTotalPages() {
+        return (int) Math.ceil((double) filteredList.size() / PAGE_SIZE);
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
     }
 
     @NonNull
@@ -44,11 +85,20 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     }
 
     @Override
+    public int getItemCount() {
+        return pagedList.size();
+    }
+
+    public List<User> getFullList() {
+        return new ArrayList<>(fullList);
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull UserAdapter.ViewHolder holder, int position) {
-        Context context = holder.itemView.getContext(); // ✅ Get the context from the view
+        Context context = holder.itemView.getContext();
         SessionManager session = new SessionManager(context);
         int sessionId = session.getId();
-        User user = users.get(position);
+        User user = pagedList.get(position);
         holder.txtUserNumber.setText((position + 1) + ".");
         holder.txtName.setText(user.getName());
         holder.txtUserName.setText(user.getUserName());
@@ -70,12 +120,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             if (listener != null) listener.onDelete(user);
         });
     }
-
-    @Override
-    public int getItemCount() {
-        return users.size();
-    }
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView txtUserNumber, txtName, txtUserName, txtLevel;
         ImageButton btnEdit, btnDelete;
