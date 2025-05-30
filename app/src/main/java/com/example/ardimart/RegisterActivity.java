@@ -81,6 +81,25 @@ public class RegisterActivity extends AppCompatActivity {
             txtPasswordConfirm.setSelection(txtPasswordConfirm.getText().length());
         });
 
+        txtUsername.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                String usernameInput = txtUsername.getText().toString().trim();
+                if (!usernameInput.isEmpty()) {
+                    executor.execute(() -> {
+                        DatabaseHelper dbHelper = new DatabaseHelper(RegisterActivity.this);
+                        SQLiteDatabase db = dbHelper.getConnection();
+                        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE username = ?", new String[]{usernameInput});
+                        if (cursor.moveToFirst()) {
+                            runOnUiThread(() -> {
+                                txtUsername.setError("Username already taken");
+                            });
+                        }
+                        cursor.close();
+                    });
+                }
+            }
+        });
+
         Spinner spinner = findViewById(R.id.txtLevel);
 
         String[] levels = {"Choose Level", "Admin", "Cashier"};
@@ -97,13 +116,12 @@ public class RegisterActivity extends AppCompatActivity {
                     selectedLevel = null;
                 }
 
-                // Use selectedLevel (could be null if no real selection)
                 Log.d("Selected Level", String.valueOf(selectedLevel));
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // Handle case if needed
+
             }
         });
 
