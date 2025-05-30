@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation("org.mindrot:jbcrypt:0.4")
+    implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
