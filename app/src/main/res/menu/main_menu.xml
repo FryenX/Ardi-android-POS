@@ -8,7 +8,7 @@
             tools:ignore="HardcodedText" />
         <item android:id="@+id/transactions"
             android:icon="@drawable/baseline_assignment_24"
-            android:title="Products"
+            android:title="Transactions"
             tools:ignore="HardcodedText"/>
         <item android:id="@+id/products"
             android:icon="@drawable/baseline_assignment_24"

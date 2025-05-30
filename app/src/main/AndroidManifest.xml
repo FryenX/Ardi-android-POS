@@ -28,6 +28,7 @@
         <activity android:name=".EditUser" />
         <activity android:name=".AddProduct" />
         <activity android:name=".EditProduct" />
+        <activity android:name=".InputTransaction" />
 
     </application>
 

@@ -26,6 +26,12 @@ public class Product implements Serializable {
         this.image = image;
     }
 
+    public Product() {}
+
+    public Product(String barcode) {
+        this.barcode = barcode;
+    }
+
     public String getBarcode() { return barcode; }
     public String getName() { return name; }
     public int getCategoryId() { return categoryId; }
@@ -47,5 +53,10 @@ public class Product implements Serializable {
     public void setSellPrice(double sellPrice) { this.sellPrice = sellPrice; }
     public void setImage(String image) {
         this.image = image;
+    }
+
+    @Override
+    public String toString() {
+        return barcode + " - " + name;
     }
 }

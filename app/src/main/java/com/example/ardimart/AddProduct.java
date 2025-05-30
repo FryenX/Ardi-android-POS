@@ -207,11 +207,19 @@ public class AddProduct extends AppCompatActivity {
         String sellPriceStr = txtSellPrice.getText().toString().trim();
         Category selectedCategory = (Category) spinnerCategory.getSelectedItem();
         int categoryId = selectedCategory.getId();
-        String imagePath = getImagePath(selectedImageUri);
+        String imagePath;
+        if (selectedImageUri == null) {
+            imagePath = "default";
+        } else {
+            imagePath = getImagePath(selectedImageUri);
+            if (imagePath == null || imagePath.isEmpty()) {
+                imagePath = "default";
+            }
+        }
 
         if (barcode.isEmpty() || name.isEmpty() || units.isEmpty() ||
                 stocksStr.isEmpty() || purchasePriceStr.isEmpty() || sellPriceStr.isEmpty() ||
-                selectedCategory.equals("Choose Category") || units.equals("Choose Unit")) {
+                selectedCategory.getId() == 0 || units.equals("Choose Unit")) {
 
             Toast.makeText(this, "Please fill in all fields and select a category", Toast.LENGTH_SHORT).show();
             return;
@@ -229,6 +237,7 @@ public class AddProduct extends AppCompatActivity {
             return;
         }
 
+        String finalImagePath = imagePath;
         executor.execute(() -> {
             try {
                 DatabaseHelper dbHelper = new DatabaseHelper(AddProduct.this);
@@ -255,7 +264,7 @@ public class AddProduct extends AppCompatActivity {
                 stmt.bindLong(5, stocks);
                 stmt.bindDouble(6, purchasePrice);
                 stmt.bindDouble(7, sellPrice);
-                stmt.bindString(8, imagePath);
+                stmt.bindString(8, finalImagePath);
                 stmt.executeInsert();
 
                 runOnUiThread(() -> {
