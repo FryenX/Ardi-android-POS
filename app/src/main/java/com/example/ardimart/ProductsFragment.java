@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
@@ -91,7 +92,6 @@ public class ProductsFragment extends Fragment {
                 ImageView imgProduct = dialogView.findViewById(R.id.imgProduct);
                 TextView txtDetails = dialogView.findViewById(R.id.txtProductDetails);
 
-                // Load image from product.getImage() path
                 String imagePath = product.getImage();
                 if (imagePath != null && !imagePath.isEmpty()) {
                     File imgFile = new File(imagePath);
@@ -242,6 +242,9 @@ public class ProductsFragment extends Fragment {
                     double sellPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("sell_price"));
                     String categoryName = cursor.getString(cursor.getColumnIndexOrThrow("category_name"));
                     String image = cursor.getString(cursor.getColumnIndexOrThrow("image"));
+                    if (image == null || image.isEmpty()) {
+                        image = "default";
+                    }
                     products.add(new Product(barcode, name, units, categoryId, categoryName, stocks, purchasePrice, sellPrice, image));
                 }
 

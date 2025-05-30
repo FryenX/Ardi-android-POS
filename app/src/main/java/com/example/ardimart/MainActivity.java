@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.home:
-                    if (savedInstanceState == null) {
                         if ("Admin".equalsIgnoreCase(level)) {
                             replaceFragment(new AdminHomeFragment(), "Home");
                             navigationView.setCheckedItem(R.id.home);
@@ -100,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
                             replaceFragment(new CashierHomeFragment(), "Home");
                             navigationView.setCheckedItem(R.id.home);
                         }
-                    }
                     break;
                 case R.id.transactions:
                     if ("Admin".equalsIgnoreCase(level)) {
