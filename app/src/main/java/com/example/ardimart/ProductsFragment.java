@@ -26,8 +26,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.ardimart.config.DatabaseHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,7 +43,9 @@ public class ProductsFragment extends Fragment {
 
     private RecyclerView recyclerProducts;
     private ProductAdapter productAdapter;
+    private TextView txtPageInfo;
     private View emptyView;
+    private Button btnNextPage, btnPrevPage;
     private static final int ADD_PRODUCT_REQUEST_CODE = 101;
 
     public ProductsFragment() {
@@ -60,9 +65,9 @@ public class ProductsFragment extends Fragment {
         productAdapter = new ProductAdapter();
         recyclerProducts.setAdapter(productAdapter);
 
-        TextView txtPageInfo = view.findViewById(R.id.txtPageInfo);
-        Button btnPrevPage = view.findViewById(R.id.btnPrevPage);
-        Button btnNextPage = view.findViewById(R.id.btnNextPage);
+        txtPageInfo = view.findViewById(R.id.txtPageInfo);
+        btnPrevPage = view.findViewById(R.id.btnPrevPage);
+        btnNextPage = view.findViewById(R.id.btnNextPage);
         EditText searchInput = view.findViewById(R.id.searchInput);
 
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -71,7 +76,7 @@ public class ProductsFragment extends Fragment {
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 productAdapter.filter(s.toString().trim());
-                updatePageInfo(txtPageInfo);
+                updatePageIndicator();
             }
             @Override
             public void afterTextChanged(Editable s) {}
@@ -92,18 +97,11 @@ public class ProductsFragment extends Fragment {
                 ImageView imgProduct = dialogView.findViewById(R.id.imgProduct);
                 TextView txtDetails = dialogView.findViewById(R.id.txtProductDetails);
 
-                String imagePath = product.getImage();
-                if (imagePath != null && !imagePath.isEmpty()) {
-                    File imgFile = new File(imagePath);
-                    if (imgFile.exists()) {
-                        Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                        imgProduct.setImageBitmap(bitmap);
-                    } else {
-                        imgProduct.setImageResource(R.drawable.ic_image_placeholder);
-                    }
-                } else {
-                    imgProduct.setImageResource(R.drawable.ic_image_placeholder);
-                }
+                Glide.with(getContext())
+                        .load(new File(product.getImage()))
+                        .placeholder(R.drawable.ic_image_placeholder)
+                        .error(R.drawable.ic_image_placeholder)
+                        .into(imgProduct);
 
                 // Build product detail text with category name
                 String details = "Barcode: " + product.getBarcode() + "\n" +
@@ -167,7 +165,7 @@ public class ProductsFragment extends Fragment {
                                     requireActivity().runOnUiThread(() -> {
                                         if (rowsDeleted > 0) {
                                             Toast.makeText(getContext(), "Product deleted", Toast.LENGTH_SHORT).show();
-                                            loadProductsFromDatabase();
+                                            loadProductsFromDatabase(productAdapter.getCurrentPage(), 10);
                                         } else {
                                             Toast.makeText(getContext(), "Failed to delete product", Toast.LENGTH_SHORT).show();
                                         }
@@ -192,7 +190,7 @@ public class ProductsFragment extends Fragment {
             int currentPage = productAdapter.getCurrentPage();
             if (currentPage > 0) {
                 productAdapter.setPage(currentPage - 1);
-                updatePageInfo(txtPageInfo);
+                updatePageIndicator();
             }
         });
 
@@ -200,7 +198,7 @@ public class ProductsFragment extends Fragment {
             int currentPage = productAdapter.getCurrentPage();
             if (currentPage < productAdapter.getTotalPages() - 1) {
                 productAdapter.setPage(currentPage + 1);
-                updatePageInfo(txtPageInfo);
+                updatePageIndicator();
             }
         });
 
@@ -210,52 +208,55 @@ public class ProductsFragment extends Fragment {
             startActivityForResult(intent, ADD_PRODUCT_REQUEST_CODE);
         });
 
-        loadProductsFromDatabase();
+        loadProductsFromDatabase(productAdapter.getCurrentPage(), 10);
         return view;
     }
 
-    private void updatePageInfo(TextView txtPageInfo) {
-        int current = productAdapter.getCurrentPage() + 1;
-        int total = productAdapter.getTotalPages();
-        txtPageInfo.setText("Page " + current + "/" + total);
-    }
-    private void loadProductsFromDatabase() {
+
+    private void loadProductsFromDatabase(int page, int pageSize) {
         Executors.newSingleThreadExecutor().execute(() -> {
             List<Product> products = new ArrayList<>();
             SQLiteDatabase db = null;
             Cursor cursor = null;
+            int offset = page * pageSize;
+
             try {
                 DatabaseHelper dbHelper = new DatabaseHelper(getContext());
                 dbHelper.copyDatabaseIfNeeded();
                 db = dbHelper.getConnection();
 
-                String query = "SELECT p.barcode, p.name AS product_name, p.units, p.category_id, p.stocks,p.purchase_price, p.sell_price,c.name AS category_name, p.image " +
-                        "FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.barcode ASC";
-                cursor = db.rawQuery(query, null);
+                String query = "SELECT p.barcode, p.name AS product_name, p.units, p.category_id, p.stocks, " +
+                        "p.purchase_price, p.sell_price, c.name AS category_name, p.image " +
+                        "FROM products p LEFT JOIN categories c ON p.category_id = c.id " +
+                        "ORDER BY p.barcode ASC LIMIT ? OFFSET ?";
+
+                cursor = db.rawQuery(query, new String[]{String.valueOf(pageSize), String.valueOf(offset)});
+
                 while (cursor != null && cursor.moveToNext()) {
-                    String barcode = cursor.getString(cursor.getColumnIndexOrThrow("barcode"));
-                    String name = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
-                    String units = cursor.getString(cursor.getColumnIndexOrThrow("units"));
-                    int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow("category_id"));
-                    double stocks = cursor.getDouble(cursor.getColumnIndexOrThrow("stocks"));
-                    double purchasePrice = cursor.getDouble(cursor.getColumnIndexOrThrow("purchase_price"));
-                    double sellPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("sell_price"));
-                    String categoryName = cursor.getString(cursor.getColumnIndexOrThrow("category_name"));
-                    String image = cursor.getString(cursor.getColumnIndexOrThrow("image"));
-                    if (image == null || image.isEmpty()) {
-                        image = "default";
-                    }
-                    products.add(new Product(barcode, name, units, categoryId, categoryName, stocks, purchasePrice, sellPrice, image));
+                    Product product = new Product(
+                            cursor.getString(cursor.getColumnIndexOrThrow("barcode")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("product_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("units")),
+                            cursor.getInt(cursor.getColumnIndexOrThrow("category_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("category_name")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("stocks")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("purchase_price")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("sell_price")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("image"))
+                    );
+                    products.add(product);
                 }
 
                 requireActivity().runOnUiThread(() -> {
                     productAdapter.setProducts(products);
+                    updatePageIndicator();
                     if (products.isEmpty()) showEmptyView("No products found");
                     else hideEmptyView();
                 });
+
             } catch (Exception e) {
                 requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Error loading products: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
             } finally {
                 if (cursor != null) cursor.close();
                 if (db != null && db.isOpen()) db.close();
@@ -263,10 +264,19 @@ public class ProductsFragment extends Fragment {
         });
     }
 
+    private void updatePageIndicator() {
+        int currentPage = productAdapter.getCurrentPage() + 1;
+        int totalPages = productAdapter.getTotalPages();
+        txtPageInfo.setText("Page " + currentPage + " of " + totalPages);
+
+        btnPrevPage.setEnabled(currentPage > 1);
+        btnNextPage.setEnabled(currentPage < totalPages);
+    }
+
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ADD_PRODUCT_REQUEST_CODE && resultCode == AppCompatActivity.RESULT_OK) {
-            loadProductsFromDatabase();
+            loadProductsFromDatabase(productAdapter.getCurrentPage(), 10);
         }
     }
 

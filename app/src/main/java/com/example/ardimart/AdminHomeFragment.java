@@ -13,19 +13,13 @@ import android.widget.TextView;
 
 import com.example.ardimart.config.SessionManager;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AdminHomeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class AdminHomeFragment extends Fragment {
     private TextView txtGreeting;
 
     public AdminHomeFragment() {
-        // Required empty public constructor
+
     }
 
-    // TODO: Rename and change types and number of parameters
     public static AdminHomeFragment newInstance() {
         AdminHomeFragment fragment = new AdminHomeFragment();
         Bundle args = new Bundle();

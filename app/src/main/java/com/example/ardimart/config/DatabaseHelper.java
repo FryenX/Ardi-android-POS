@@ -46,6 +46,7 @@ public class DatabaseHelper {
         }
     }
 
+
     public SQLiteDatabase getConnection() {
         return SQLiteDatabase.openDatabase(getDatabasePath(), null, SQLiteDatabase.OPEN_READWRITE);
     }
