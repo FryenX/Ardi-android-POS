@@ -110,7 +110,7 @@ public class TransactionDataAdapter extends RecyclerView.Adapter<TransactionData
         holder.invoiceText.setText(t.getInvoice());
         holder.dateText.setText(t.getDateTime());
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
-        holder.netText.setText(currencyFormat.format(Double.parseDouble(t.getNetTotal())));
+        holder.netText.setText(currencyFormat.format(Double.parseDouble(String.valueOf(t.getNetTotal()))));
 
         holder.detailBtn.setOnClickListener(v -> listener.onDetail(t));
         holder.deleteBtn.setOnClickListener(v -> listener.onDelete(t));

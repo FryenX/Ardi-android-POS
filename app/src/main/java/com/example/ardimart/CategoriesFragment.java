@@ -185,10 +185,12 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
         txtPageIndicator.setText("Page " + current + " of " + (total == 0 ? 1 : total));
     }
     private void updatePageIndicator() {
-        TextView txtPageIndicator = getView().findViewById(R.id.txtPageIndicator);
-        int current = categoryAdapter.getCurrentPage() + 1;
-        int total = categoryAdapter.getTotalPages();
-        txtPageIndicator.setText("Page " + current + " of " + total);
+        int currentPage = categoryAdapter.getCurrentPage() + 1;
+        int totalPages = categoryAdapter.getTotalPages();
+        txtPageIndicator.setText("Page " + currentPage + " of " + totalPages);
+
+        btnPrev.setEnabled(currentPage > 1);
+        btnNext.setEnabled(currentPage < totalPages);
     }
     private void sortByName(boolean ascending) {
         List<Category> currentList = categoryAdapter.getFullList();
@@ -235,7 +237,7 @@ public class CategoriesFragment extends Fragment implements AddCategoryDialog.Ad
 
                 requireActivity().runOnUiThread(() -> {
                     categoryAdapter.setCategories(categoryList);
-
+                    updatePageIndicator();
                     // Show or hide empty view based on the result
                     if (categoryList.isEmpty()) {
                         showEmptyView("No categories available");

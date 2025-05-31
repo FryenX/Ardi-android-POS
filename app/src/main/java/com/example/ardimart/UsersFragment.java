@@ -202,6 +202,7 @@ public class UsersFragment extends Fragment {
 
                 List<User> finalUserList = new ArrayList<>(userList);
                 requireActivity().runOnUiThread(() -> {
+                    updatePageIndicator();
                     userAdapter.setUsers(finalUserList);
                     if (finalUserList.isEmpty()) {
                         showEmptyView("No users found");
