@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -54,6 +55,7 @@ import java.util.Set;
 public class InputTransaction extends AppCompatActivity implements TransactionAdapter.OnTransactionChangeListener{
     private SessionManager sessionManager;
     private EditText txtInvoice, txtDate, txtCustomer, txtBarcode, txtProduct, txtQty, txtTotal;
+    private String lastInvoice;
     private ImageButton btnDelete, btnSave;
     private Button btnAddItem;
     private RecyclerView recyclerTransactionsDetail;
@@ -184,10 +186,11 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
                             boolean success = saveTransactionWithDetailsThreadSafe(discountPercent, discountIDR, netTotal, paymentAmount, paymentChange);
                             runOnUiThread(() -> {
                                 if (success) {
+                                    lastInvoice = txtInvoice.getText().toString();
+                                    showPrintConfirmationDialog(lastInvoice);
                                     loadTransactionItems();
                                     generateInvoice(txtInvoice);
                                     calculateTotal();
-                                    showPrintConfirmationDialog();
                                 } else {
                                     Toast.makeText(this, "Failed to save transaction. Please try again.", Toast.LENGTH_SHORT).show();
                                 }
@@ -236,7 +239,7 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
 
         SQLiteDatabase db = null;
         int maxRetries = 3;
-        int retryDelay = 100; // milliseconds
+        int retryDelay = 100;
 
         for (int attempt = 0; attempt < maxRetries; attempt++) {
             try {
@@ -313,13 +316,13 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         return false;
     }
 
-    private void showPrintConfirmationDialog() {
+    private void showPrintConfirmationDialog(String lastInvoice) {
         new AlertDialog.Builder(this)
                 .setTitle("Print Invoice")
                 .setMessage("Do you want to print the invoice?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     // Call your printing function here
-                    printInvoice();
+                    printInvoice(lastInvoice);
                 })
                 .setNegativeButton("No", null)
                 .show();
@@ -332,6 +335,16 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
             return;
         }
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.isEmpty()) {
             Toast.makeText(this, "No paired Bluetooth devices found", Toast.LENGTH_SHORT).show();
@@ -353,12 +366,12 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
                     selectedPrinterDevice = devices[which];
                     Toast.makeText(this, "Selected printer: " + selectedPrinterDevice.getName(), Toast.LENGTH_SHORT).show();
                     // Now call printInvoice with the selected printer
-                    printInvoice();
+                    printInvoice(lastInvoice);
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-    private void printInvoice() {
+    private void printInvoice(String lastInvoice) {
         if (selectedPrinterDevice == null) {
             // No printer selected yet, ask user to pick one first
             showPairedDevicesDialog();
@@ -378,32 +391,39 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
                 return;
             }
         }
-        String invoice = String.valueOf(txtInvoice.getText());
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         SQLiteDatabase db = dbHelper.getConnection();
         Log.d("DBPath", "Database Path: " + db.getPath());
-
         String storeName = "Pande Ardi";
         String storeAddress = "Jl. Arjuna, Darma Kaja";
 
         String dateTime = "";
         String customer = "-";
         List<String> items = new ArrayList<>();
-        double total = 0;
+        double discountPercent = 0;
+        double discountIDR = 0;
+        double grossTotal = 0;
+        double netTotal = 0;
 
-        Cursor transCursor = db.rawQuery("SELECT date_time, customer_id, net_total FROM transactions WHERE invoice = ?", new String[]{invoice});
+        Cursor transCursor = db.rawQuery(
+                "SELECT date_time, customer_id, discount_percent, discount_idr, gross_total, net_total FROM transactions WHERE invoice = ?",
+                new String[]{lastInvoice}
+        );
 
         if (transCursor.moveToFirst()) {
             dateTime = transCursor.getString(transCursor.getColumnIndexOrThrow("date_time"));
             int customerId = transCursor.getInt(transCursor.getColumnIndexOrThrow("customer_id"));
-            total = transCursor.getDouble(transCursor.getColumnIndexOrThrow("net_total"));
+            discountPercent = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_percent"));
+            discountIDR = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_idr"));
+            grossTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("gross_total"));
+            netTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("net_total"));
 
-            // You can add a method to lookup customer name by ID, or keep as "-" if 0
+
             if (customerId == 0) {
                 customer = "-";
             } else {
                 customer = "Customer ID: " + customerId;
-                // TODO: Optionally lookup customer name from customers table here
+
             }
         }
         transCursor.close();
@@ -411,11 +431,11 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         // Query transaction details
         Cursor detailCursor = db.rawQuery(
                 "SELECT barcode, qty, sell_price, sub_total FROM transactions_detail WHERE invoice = ?",
-                new String[]{invoice}
+                new String[]{lastInvoice}
         );
 
         if (detailCursor.getCount() == 0) {
-            Log.e("PrintInvoice", "No details found for invoice: " + invoice);
+            Log.e("PrintInvoice", "No details found for invoice: " + lastInvoice);
         }
 
         while (detailCursor.moveToNext()) {
@@ -426,8 +446,8 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
 
             // For product name, you can create a helper method to fetch from products table by barcode:
             String productName = getProductName(barcode);
-
-            items.add(String.format("[L]%s x%.0f [R]%.2f [R]%.2f", productName, qty, sellPrice, subTotal));
+            String units = getProductUnit(barcode);
+            items.add(String.format("[L]%s x%.0f %s [R]%.2f [R]%.2f", productName, qty, units, sellPrice, subTotal));
         }
         detailCursor.close();
 
@@ -435,7 +455,7 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         StringBuilder invoiceText = new StringBuilder();
         invoiceText.append("[C]<u><font size='big'>").append(storeName).append("</font></u>\n");
         invoiceText.append("[C]").append(storeAddress).append("\n");
-        invoiceText.append("[L]Invoice: ").append(invoice).append("\n");
+        invoiceText.append("[L]Invoice: ").append(lastInvoice).append("\n");
         invoiceText.append("[L]Date: ").append(dateTime).append("\n");
         invoiceText.append("[L]Customer: ").append(customer).append("\n");
         invoiceText.append("[C]-----------------------------\n");
@@ -445,7 +465,10 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         }
 
         invoiceText.append("[C]-----------------------------\n");
-        invoiceText.append(String.format("[L]Total [R]%.2f\n", total));
+        invoiceText.append(String.format("[L]Gross Total [R]%.2f\n", grossTotal));
+        invoiceText.append(String.format("[L]Disc %% [R]%.2f%%\n", discountPercent));
+        invoiceText.append(String.format("[L]Disc IDR [R]%.2f\n", discountIDR));
+        invoiceText.append(String.format("[L]Net Total [R]%.2f\n", netTotal));
         invoiceText.append("[C]Thank you!\n");
 
         try {
@@ -478,6 +501,21 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         cursor.close();
 
         return productName;
+    }
+
+    private String getProductUnit(String barcode) {
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        SQLiteDatabase db = dbHelper.getConnection();
+
+        Cursor cursor = db.rawQuery("SELECT units FROM products WHERE barcode = ?", new String[]{barcode});
+        if (cursor.moveToFirst()) {
+            String unit = cursor.getString(cursor.getColumnIndexOrThrow("units"));
+            cursor.close();
+            return unit;
+        } else {
+            cursor.close();
+            return "";
+        }
     }
 
     private double getCurrentGrossTotal() {
@@ -745,8 +783,9 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         SQLiteDatabase db = dbHelper.getConnection();
 
-        Cursor cursor = db.rawQuery("SELECT sell_price, stocks FROM products WHERE barcode = ?", new String[]{barcode});
+        Cursor cursor = db.rawQuery("SELECT purchase_price, sell_price, stocks FROM products WHERE barcode = ?", new String[]{barcode});
         if (cursor.moveToFirst()) {
+            double purchase_price = cursor.getDouble(cursor.getColumnIndexOrThrow("purchase_price"));
             double sell_price = cursor.getDouble(cursor.getColumnIndexOrThrow("sell_price"));
             int currentStock = cursor.getInt(cursor.getColumnIndexOrThrow("stocks"));
 
@@ -762,6 +801,7 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
             ContentValues values = new ContentValues();
             values.put("invoice", invoice);
             values.put("barcode", barcode);
+            values.put("purchase_price", purchase_price);
             values.put("qty", qty);
             values.put("sell_price", sell_price);
             values.put("subtotal", subtotal);
@@ -960,8 +1000,7 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
                 }
             }
             if (granted) {
-                // Permissions granted, you can proceed with printing or scanning
-                printInvoice();
+                printInvoice(lastInvoice);
             } else {
                 Toast.makeText(this, "Bluetooth permissions are required to print", Toast.LENGTH_SHORT).show();
             }
