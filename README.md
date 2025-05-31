@@ -23,5 +23,4 @@ This is a mobile Point of Sale (POS) application built using **Android Studio**.
 - **Bluetooth / USB API** (for printer support)
 - **ZXing** library (for barcode scanning)
 
-## 📂 Project Structure
 
