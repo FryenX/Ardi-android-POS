@@ -373,12 +373,11 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
     }
     private void printInvoice(String lastInvoice) {
         if (selectedPrinterDevice == null) {
-            // No printer selected yet, ask user to pick one first
             showPairedDevicesDialog();
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             List<String> permissions = new ArrayList<>();
             if (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH_SCAN);
@@ -391,103 +390,96 @@ public class InputTransaction extends AppCompatActivity implements TransactionAd
                 return;
             }
         }
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        SQLiteDatabase db = dbHelper.getConnection();
-        Log.d("DBPath", "Database Path: " + db.getPath());
-        String storeName = "Pande Ardi";
-        String storeAddress = "Jl. Arjuna, Darma Kaja";
 
-        String dateTime = "";
-        String customer = "-";
-        List<String> items = new ArrayList<>();
-        double discountPercent = 0;
-        double discountIDR = 0;
-        double grossTotal = 0;
-        double netTotal = 0;
+        // Perform DB and print in background thread
+        new Thread(() -> {
+            try {
+                DatabaseHelper dbHelper = new DatabaseHelper(this);
+                SQLiteDatabase db = dbHelper.getConnection();
 
-        Cursor transCursor = db.rawQuery(
-                "SELECT date_time, customer_id, discount_percent, discount_idr, gross_total, net_total FROM transactions WHERE invoice = ?",
-                new String[]{lastInvoice}
-        );
+                String storeName = "Pande Ardi";
+                String storeAddress = "Jl. Arjuna, Darma Kaja";
 
-        if (transCursor.moveToFirst()) {
-            dateTime = transCursor.getString(transCursor.getColumnIndexOrThrow("date_time"));
-            int customerId = transCursor.getInt(transCursor.getColumnIndexOrThrow("customer_id"));
-            discountPercent = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_percent"));
-            discountIDR = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_idr"));
-            grossTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("gross_total"));
-            netTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("net_total"));
+                String dateTime = "";
+                String customer = "-";
+                List<String> items = new ArrayList<>();
+                double discountPercent = 0;
+                double discountIDR = 0;
+                double grossTotal = 0;
+                double netTotal = 0;
 
+                Cursor transCursor = db.rawQuery(
+                        "SELECT date_time, customer_id, discount_percent, discount_idr, gross_total, net_total FROM transactions WHERE invoice = ?",
+                        new String[]{lastInvoice}
+                );
 
-            if (customerId == 0) {
-                customer = "-";
-            } else {
-                customer = "Customer ID: " + customerId;
+                if (transCursor.moveToFirst()) {
+                    dateTime = transCursor.getString(transCursor.getColumnIndexOrThrow("date_time"));
+                    int customerId = transCursor.getInt(transCursor.getColumnIndexOrThrow("customer_id"));
+                    discountPercent = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_percent"));
+                    discountIDR = transCursor.getDouble(transCursor.getColumnIndexOrThrow("discount_idr"));
+                    grossTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("gross_total"));
+                    netTotal = transCursor.getDouble(transCursor.getColumnIndexOrThrow("net_total"));
 
+                    customer = customerId == 0 ? "-" : "Customer ID: " + customerId;
+                }
+                transCursor.close();
+
+                Cursor detailCursor = db.rawQuery(
+                        "SELECT barcode, qty, sell_price, sub_total FROM transactions_detail WHERE invoice = ?",
+                        new String[]{lastInvoice}
+                );
+
+                while (detailCursor.moveToNext()) {
+                    String barcode = detailCursor.getString(detailCursor.getColumnIndexOrThrow("barcode"));
+                    double qty = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("qty"));
+                    double sellPrice = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("sell_price"));
+                    double subTotal = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("sub_total"));
+
+                    String productName = getProductName(barcode);
+                    String units = getProductUnit(barcode);
+                    items.add(String.format("[L]%s x%.0f %s [R]%.2f [R]%.2f", productName, qty, units, sellPrice, subTotal));
+                }
+                detailCursor.close();
+
+                StringBuilder invoiceText = new StringBuilder();
+                invoiceText.append("[C]<u><font size='big'>").append(storeName).append("</font></u>\n");
+                invoiceText.append("[C]").append(storeAddress).append("\n");
+                invoiceText.append("[L]Invoice: ").append(lastInvoice).append("\n");
+                invoiceText.append("[L]Date: ").append(dateTime).append("\n");
+                invoiceText.append("[L]Customer: ").append(customer).append("\n");
+                invoiceText.append("[C]-----------------------------\n");
+
+                for (String line : items) {
+                    invoiceText.append(line).append("\n");
+                }
+
+                invoiceText.append("[C]-----------------------------\n");
+                invoiceText.append(String.format("[L]Gross Total [R]%.2f\n", grossTotal));
+                invoiceText.append(String.format("[L]Disc %% [R]%.2f%%\n", discountPercent));
+                invoiceText.append(String.format("[L]Disc IDR [R]%.2f\n", discountIDR));
+                invoiceText.append(String.format("[L]Net Total [R]%.2f\n", netTotal));
+                invoiceText.append("[C]Thank you!\n");
+
+                // Attempt connection and print
+                BluetoothConnection printerConnection = new BluetoothConnection(selectedPrinterDevice);
+                EscPosPrinter printer = new EscPosPrinter(
+                        printerConnection,
+                        203,
+                        48f,
+                        32,
+                        new EscPosCharsetEncoding("windows-1252", 16)
+                );
+
+                printer.printFormattedText(invoiceText.toString());
+
+            } catch (final Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Failed to print: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
             }
-        }
-        transCursor.close();
-
-        // Query transaction details
-        Cursor detailCursor = db.rawQuery(
-                "SELECT barcode, qty, sell_price, sub_total FROM transactions_detail WHERE invoice = ?",
-                new String[]{lastInvoice}
-        );
-
-        if (detailCursor.getCount() == 0) {
-            Log.e("PrintInvoice", "No details found for invoice: " + lastInvoice);
-        }
-
-        while (detailCursor.moveToNext()) {
-            String barcode = detailCursor.getString(detailCursor.getColumnIndexOrThrow("barcode"));
-            double qty = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("qty"));
-            double sellPrice = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("sell_price"));
-            double subTotal = detailCursor.getDouble(detailCursor.getColumnIndexOrThrow("sub_total"));
-
-            // For product name, you can create a helper method to fetch from products table by barcode:
-            String productName = getProductName(barcode);
-            String units = getProductUnit(barcode);
-            items.add(String.format("[L]%s x%.0f %s [R]%.2f [R]%.2f", productName, qty, units, sellPrice, subTotal));
-        }
-        detailCursor.close();
-
-        // Build the invoice text dynamically
-        StringBuilder invoiceText = new StringBuilder();
-        invoiceText.append("[C]<u><font size='big'>").append(storeName).append("</font></u>\n");
-        invoiceText.append("[C]").append(storeAddress).append("\n");
-        invoiceText.append("[L]Invoice: ").append(lastInvoice).append("\n");
-        invoiceText.append("[L]Date: ").append(dateTime).append("\n");
-        invoiceText.append("[L]Customer: ").append(customer).append("\n");
-        invoiceText.append("[C]-----------------------------\n");
-
-        for (String line : items) {
-            invoiceText.append(line).append("\n");
-        }
-
-        invoiceText.append("[C]-----------------------------\n");
-        invoiceText.append(String.format("[L]Gross Total [R]%.2f\n", grossTotal));
-        invoiceText.append(String.format("[L]Disc %% [R]%.2f%%\n", discountPercent));
-        invoiceText.append(String.format("[L]Disc IDR [R]%.2f\n", discountIDR));
-        invoiceText.append(String.format("[L]Net Total [R]%.2f\n", netTotal));
-        invoiceText.append("[C]Thank you!\n");
-
-        try {
-            BluetoothConnection printerConnection = new BluetoothConnection(selectedPrinterDevice);
-
-            EscPosPrinter printer = new EscPosPrinter(
-                    printerConnection,
-                    203,
-                    48f,
-                    32,
-                    new EscPosCharsetEncoding("windows-1252", 16)
-            );
-
-            printer.printFormattedText(invoiceText.toString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Print failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+        }).start();
     }
 
     private String getProductName(String barcode) {

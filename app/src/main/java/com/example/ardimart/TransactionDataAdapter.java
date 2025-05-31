@@ -19,6 +19,7 @@ public class TransactionDataAdapter extends RecyclerView.Adapter<TransactionData
     private List<TransactionData> fullList = new ArrayList<>();
     private List<TransactionData> filteredList = new ArrayList<>();
     private List<TransactionData> pagedList = new ArrayList<>();
+    private String userLevel = "Cashier";
     private static final int PAGE_SIZE = 10;
     private int currentPage = 0;
     private TransactionDataAdapter.OnTransactionClickListener listener;
@@ -28,6 +29,9 @@ public class TransactionDataAdapter extends RecyclerView.Adapter<TransactionData
         void onDelete(TransactionData transaction);
     }
 
+    public void setUserLevel(String userLevel) {
+        this.userLevel = userLevel;
+    }
     public void setListener(TransactionDataAdapter.OnTransactionClickListener listener) {
         this.listener = listener;
     }
@@ -114,6 +118,11 @@ public class TransactionDataAdapter extends RecyclerView.Adapter<TransactionData
 
         holder.detailBtn.setOnClickListener(v -> listener.onDetail(t));
         holder.deleteBtn.setOnClickListener(v -> listener.onDelete(t));
+        if ("Cashier".equalsIgnoreCase(userLevel)) {
+            holder.deleteBtn.setVisibility(View.GONE);
+        } else {
+            holder.deleteBtn.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

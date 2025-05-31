@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ardimart.config.DatabaseHelper;
+import com.example.ardimart.config.SessionManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -158,7 +159,9 @@ public class DataTransactionsFragment extends Fragment {
 
         TextView sortInvoice = view.findViewById(R.id.txtInvoice);
         TextView sortDate = view.findViewById(R.id.txtDate);
-
+        SessionManager session = new SessionManager(requireContext());
+        String level = session.getLevel();
+        transactionDataAdapter.setUserLevel(level);
         sortInvoice.setOnClickListener(v -> {
             sortByInvoice = !sortByInvoice;
             updateSortIndicators(DataTransactionsFragment.SortField.INVOICE, sortByInvoice);
